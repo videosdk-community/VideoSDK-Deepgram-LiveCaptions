@@ -1,5 +1,10 @@
 import React, { useState, useEffect, useRef, createRef, memo } from "react";
-import { Constants, useMeeting, useParticipant, usePubSub } from "@videosdk.live/react-sdk";
+import {
+  Constants,
+  useMeeting,
+  useParticipant,
+  usePubSub,
+} from "@videosdk.live/react-sdk";
 import { BottomBar } from "./components/BottomBar";
 import { SidebarConatiner } from "../components/sidebar/SidebarContainer";
 import MemorizedParticipantView from "./components/ParticipantView";
@@ -12,45 +17,42 @@ import useIsTab from "../hooks/useIsTab";
 import { useMediaQuery } from "react-responsive";
 import { toast } from "react-toastify";
 import { useMeetingAppContext } from "../MeetingAppContextDef";
+import { CaptionUI } from "../components/CaptionUI";
 
-export function MeetingContainer({
-  onMeetingLeave,
-  setIsMeetingLeft,
-}) {
-  const {
-    setSelectedMic,
-    setSelectedWebcam,
-    setSelectedSpeaker,
-  } = useMeetingAppContext();
+export function MeetingContainer({ onMeetingLeave, setIsMeetingLeft }) {
+  const { setSelectedMic, setSelectedWebcam, setSelectedSpeaker } =
+    useMeetingAppContext();
 
   const [participantsData, setParticipantsData] = useState([]);
 
-  const ParticipantMicStream = memo(({ participantId }) => {
-    // Individual hook for each participant
-    const { micStream } = useParticipant(participantId);
-  
-    useEffect(() => {
-  
-      if (micStream) {
-        const mediaStream = new MediaStream();
-        mediaStream.addTrack(micStream.track);
-  
-        const audioElement = new Audio();
-        audioElement.srcObject = mediaStream;
-        audioElement.play();
+  const ParticipantMicStream = memo(
+    ({ participantId }) => {
+      // Individual hook for each participant
+      const { micStream } = useParticipant(participantId);
 
-      }
-    }, [micStream, participantId]); 
-  
-    return null;
-  }, [participantsData]);
+      useEffect(() => {
+        if (micStream) {
+          const mediaStream = new MediaStream();
+          mediaStream.addTrack(micStream.track);
+
+          const audioElement = new Audio();
+          audioElement.srcObject = mediaStream;
+          audioElement.play();
+        }
+      }, [micStream, participantId]);
+
+      return null;
+    },
+    [participantsData]
+  );
 
   const { useRaisedHandParticipants } = useMeetingAppContext();
   const bottomBarHeight = 60;
 
   const [containerHeight, setContainerHeight] = useState(0);
   const [containerWidth, setContainerWidth] = useState(0);
-  const [localParticipantAllowedJoin, setLocalParticipantAllowedJoin] = useState(null);
+  const [localParticipantAllowedJoin, setLocalParticipantAllowedJoin] =
+    useState(null);
   const [meetingErrorVisible, setMeetingErrorVisible] = useState(false);
   const [meetingError, setMeetingError] = useState(false);
 
@@ -72,12 +74,12 @@ export function MeetingContainer({
   const sideBarContainerWidth = isXLDesktop
     ? 400
     : isLGDesktop
-      ? 360
-      : isTab
-        ? 320
-        : isMobile
-          ? 280
-          : 240;
+    ? 360
+    : isTab
+    ? 320
+    : isMobile
+    ? 280
+    : 240;
 
   useEffect(() => {
     containerRef.current?.offsetHeight &&
@@ -105,9 +107,10 @@ export function MeetingContainer({
       status === Constants.recordingEvents.RECORDING_STOPPED
     ) {
       toast(
-        `${status === Constants.recordingEvents.RECORDING_STARTED
-          ? "Meeting recording is started"
-          : "Meeting recording is stopped."
+        `${
+          status === Constants.recordingEvents.RECORDING_STARTED
+            ? "Meeting recording is started"
+            : "Meeting recording is stopped."
         }`,
         {
           position: "bottom-left",
@@ -128,7 +131,6 @@ export function MeetingContainer({
     participant && participant.setQuality("high");
   }
 
-
   function onEntryResponded(participantId, name) {
     if (mMeetingRef.current?.localParticipant?.id === participantId) {
       if (name === "allowed") {
@@ -147,15 +149,15 @@ export function MeetingContainer({
   }
 
   function onMeetingLeft() {
-    setSelectedMic({ id: null, label: null })
-    setSelectedWebcam({ id: null, label: null })
-    setSelectedSpeaker({ id: null, label: null })
+    setSelectedMic({ id: null, label: null });
+    setSelectedWebcam({ id: null, label: null });
+    setSelectedSpeaker({ id: null, label: null });
     onMeetingLeave();
   }
 
   const _handleOnError = (data) => {
     const { code, message } = data;
-    console.log("meetingErr", code, message)
+    console.log("meetingErr", code, message);
 
     const joiningErrCodes = [
       4001, 4002, 4003, 4004, 4005, 4006, 4007, 4008, 4009, 4010,
@@ -195,17 +197,14 @@ export function MeetingContainer({
 
       setParticipantsData(participantIds);
       console.log("Setting participants");
-    }, 500); 
-
+    }, 500);
 
     return () => clearTimeout(debounceTimeout);
   }, [mMeeting.participants]);
 
-
   useEffect(() => {
     mMeetingRef.current = mMeeting;
   }, [mMeeting]);
-
 
   usePubSub("RAISE_HAND", {
     onMessageReceived: (data) => {
@@ -279,7 +278,10 @@ export function MeetingContainer({
                   ) : null}
                   {isPresenting && isMobile ? (
                     participantsData.map((participantId) => (
-                      <ParticipantMicStream key={participantId} participantId={participantId} />
+                      <ParticipantMicStream
+                        key={participantId}
+                        participantId={participantId}
+                      />
                     ))
                   ) : (
                     <MemorizedParticipantView isPresenting={isPresenting} />
@@ -290,6 +292,8 @@ export function MeetingContainer({
                   height={containerHeight - bottomBarHeight}
                   sideBarContainerWidth={sideBarContainerWidth}
                 />
+
+                <CaptionUI />
               </div>
 
               <BottomBar
